@@ -4,7 +4,7 @@ import json
 import sys
 import colorama
 
-from common import logger
+from log import logger
 
 
 class CrApiManager:
