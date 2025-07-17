@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy import ForeignKey, Integer, Text, String, Boolean
 import bcrypt
 from core.db import Base
@@ -28,5 +29,4 @@ class User(Base):
         return result
 
     def __str__(self):
-        return f"<User[id={self.id};username='{self.name}']>"
-
+        return f"""<User[id={self.id};email={self.email}]>"""
