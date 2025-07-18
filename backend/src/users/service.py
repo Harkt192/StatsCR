@@ -1,17 +1,59 @@
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from users.models import User
-from users.schemes import UserCreateScheme
+from users.schemes import UserCreateScheme, UserGetScheme
 
 
 class UserManager:
     @staticmethod
-    async def get(*, user_id: int, session: AsyncSession):
+    async def get(*, user_id: int, session: AsyncSession) -> User:
         user = await session.get(User, user_id)
         return user
 
     @staticmethod
-    async def put(*, user_data: UserCreateScheme, session: AsyncSession):
-        user = User()
-        query = update(User).where(User.id == changed_user.id).values(user)
+    async def create(*, user_data: UserCreateScheme, session: AsyncSession):
+        session.add(user_data)
+        result = await session.commit()
+        return result   
+
+    @staticmethod
+    async def update(*, user_data: UserGetScheme, session: AsyncSession):
+        # user = User(
+        #     id=user_data.id,
+        #     email=user_data.email,
+        #     password=User.hash_password(user_data.password),
+        #     first_name=user_data.first_name,
+        #     last_name=user_data.last_name,
+        #     game_id=user_data.game_id,
+        #     language=user_data.language,
+        #     photo_url=user_data.photo_url,
+        #     active=user_data.active
+        # )
+        query = update(User).where(User.id == changed_user.id).values(user_data)
+        result = await session.execute(query)
+        return result
+
+    @staticmethod
+    async def deactivate(*, user_id: int, session: AsyncSession):
+        query = update(User).where(User.id == user_id).values(User.active == False)
+        result = await session.execute(query)
+        return result
+
+    @staticmethod
+    async def activate(*, user_id: int, session: AsyncSession):
+        query = update(User).where(User.id == user_id).values(User.active == True)
+        result = await session.execute(query)
+        return result
+
+    @staticmethod
+    async def delete(*, user_id: int, session: AsyncSession):
+        query = delete(User).where(User.id == user_id)
+        result = await session.execute(query)
+        return result
+
+
+
+
+

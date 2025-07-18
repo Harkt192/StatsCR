@@ -5,6 +5,8 @@ import bcrypt
 from core.db import Base
 from typing import Optional
 
+from users.schemes import UserCreateScheme
+
 
 class User(Base):
     __tablename__ = "users"
