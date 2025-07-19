@@ -1,2 +1,1 @@
-from user.models import *
-from players.models import *
+from users.models import *

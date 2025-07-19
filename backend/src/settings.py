@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_DB: str
     SERVER_HOST: str
-    API_TOKEN: str
+    APIKEY: str
 
     @property
     def DATABASE_URL(self) -> str:
@@ -25,8 +25,8 @@ class Settings(BaseSettings):
                 host=self.POSTGRES_HOST,
                 username=self.POSTGRES_USER,
                 password=self.POSTGRES_PASSWORD,
-                port=5432
-
+                port=5432,
+                path=self.POSTGRES_DB
             )
         )
 

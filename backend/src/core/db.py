@@ -9,9 +9,10 @@ from fastapi import Depends
 from typing import Annotated
 
 from settings import settings
+from log import logger
 
-
-
+logger.info("Starting engine")
+logger.info(settings.DATABASE_URL)
 engine = create_async_engine(settings.DATABASE_URL, echo=True, future=True)
 
 
@@ -21,6 +22,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 
 async def init_db():
     async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.drop_all)
         await connection.run_sync(Base.metadata.create_all)
 
 

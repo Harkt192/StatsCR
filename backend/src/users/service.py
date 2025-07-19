@@ -1,14 +1,26 @@
-from sqlalchemy import select, update, delete
-
+from sqlalchemy import select, update, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from users.models import User
 from users.schemes import UserCreateScheme, UserGetScheme
 
+from core.db import SessionDep
 
-class UserManager:
+
+class UserService:
+
     @staticmethod
-    async def get(*, user_id: int, session: AsyncSession) -> User:
+    async def get_all(session: AsyncSession):
+        print("get all")
+        query = select(User)
+        print(type(query), query)
+        users = await session.execute(query)
+        print(users)
+        return users.scalars().all()
+
+
+    @staticmethod
+    async def get(*, user_id: int, session: AsyncSession) -> User or None:
         user = await session.get(User, user_id)
         return user
 
@@ -55,5 +67,5 @@ class UserManager:
 
 
 
-
+UserService = UserService()
 
