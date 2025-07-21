@@ -1,10 +1,6 @@
 import requests
-import jwt
-import json
-import sys
-import colorama
 
-from log import logger
+from backend.src.log import logger
 
 
 class CrApiManager:

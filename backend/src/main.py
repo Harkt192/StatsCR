@@ -1,21 +1,16 @@
 from fastapi import FastAPI, Request, APIRouter
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 
 from dotenv import load_dotenv
 import uvicorn
 import colorama
-import logging
-import os
 
-from request import CrApiManager
-from log import logger
+from backend.src.log import logger
 
 from core.db import init_db
 from users.views import users_rt
 
-from settings import settings
+from backend.src.settings import settings
 
 
 load_dotenv()

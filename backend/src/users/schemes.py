@@ -18,3 +18,16 @@ class UserCreateScheme(UserBaseScheme):
 
 class UserGetScheme(UserCreateScheme):
     id: int
+
+
+class UserUpdateScheme(BaseModel):
+    id: int
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
+    game_id: Optional[str] = None
+    language: Optional[str] = None
+    photo_url: Optional[str] = None
+    active: Optional[bool] = None
+

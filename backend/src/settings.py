@@ -9,6 +9,10 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
+    private_key_path: Path = BASE_DIR / "certs" / "jwt-private.pem"
+    public_key_path: Path = BASE_DIR / "certs" / "jwt-public.pem"
+    algorithm: str = "RS256"
+    access_token_expire_minutes: int = 15
     SECRET_KEY:str = secrets.token_urlsafe(32)
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
