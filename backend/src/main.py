@@ -9,6 +9,7 @@ from backend.src.log import logger
 
 from core.db import init_db
 from users.views import users_rt
+from users.auth import auth_rt
 
 from backend.src.settings import settings
 
@@ -23,6 +24,7 @@ app = FastAPI(docs_url="/api/docs", redoc_url="/api/redoc")
 def create_main_router():
     router = APIRouter(prefix="/api")
     router.include_router(users_rt)
+    router.include_router(auth_rt)
     return router
 
 

@@ -2,7 +2,7 @@ from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 
 from core.db import SessionDep
-from users.schemes import UserGetScheme, UserCreateScheme, UserUpdateScheme
+from users.schemes import UserGetScheme, UserCreateScheme, UserScheme
 from users.service import UserService
 
 users_rt = APIRouter(prefix="/users")

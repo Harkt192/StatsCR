@@ -30,3 +30,6 @@ class User(Base):
 
     def __str__(self):
         return f"""<User[id={self.id};email={self.email}]>"""
+
+    def __repr__(self):
+        return f"""[{self.id} {self.email} {self.game_id}]"""

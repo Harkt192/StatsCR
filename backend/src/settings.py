@@ -1,9 +1,12 @@
 import secrets
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings
+from pathlib import Path
 
 from dotenv import load_dotenv
 
+
+BASE_DIR = Path(__file__).parent
 
 load_dotenv()
 
@@ -35,7 +38,7 @@ class Settings(BaseSettings):
         )
 
     class Config:
-        env_file = "../.env"
+        env_file = "../../.env"
         case_sensitive = True
 
 

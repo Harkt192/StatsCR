@@ -1,4 +1,12 @@
-import bcrypt
+import requests
 
-a = bcrypt.checkpw("qwerty".encode(), "$2b$12$2kGr/K91KOFf3fXkdll8xullRouCwWzHK2Htp5OgZfKNBOQOlFNlS".encode())
-print(a)
+
+a = requests.post("http://127.0.0.1:8001/api/jwt/login",
+                  {
+                      "username": "harktreallife@gmail.com",
+                      "password": "qwerty"
+                  }
+                  )
+print(a.json())
+b = requests.get("http://127.0.0.1:8001/api/jwt/users/me")
+print(b)

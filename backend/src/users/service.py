@@ -2,11 +2,12 @@ from sqlalchemy import select, update, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from users.models import User
-from users.schemes import UserCreateScheme, UserGetScheme, UserUpdateScheme
+from users.schemes import UserCreateScheme, UserGetScheme, UserScheme
 
 from core.db import SessionDep
 
-from backend.src.log import logger
+from log import logger
+from users.utils import hash_password, validate_password
 
 
 class UserService:
@@ -24,16 +25,16 @@ class UserService:
     @staticmethod
     async def create(*, user_data: UserCreateScheme, session: AsyncSession):
         user_data = dict(user_data)
-        user_data["password"] = await User.hash_password(user_data["password"])
+        user_data["password"] = await hash_password(user_data["password"])
         user = User(**user_data)
         session.add(user)
         await session.commit()
 
     @staticmethod
-    async def update(*, user_data: UserUpdateScheme, session: AsyncSession):
+    async def update(*, user_data: UserScheme, session: AsyncSession):
         user_data = dict(user_data)
         if "password" in user_data.keys():
-            user_data["password"] = await User.hash_password(user_data["password"])
+            user_data["password"] = await hash_password(user_data["password"])
 
         user = await session.get(User, user_data["id"])
 

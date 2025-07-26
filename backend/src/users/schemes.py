@@ -8,6 +8,10 @@ class UserBaseScheme(BaseModel):
     last_name: Optional[str] = None
 
 
+class UserGetScheme(BaseModel):
+    id: int
+
+
 class UserCreateScheme(UserBaseScheme):
     email: str
     password: str
@@ -16,11 +20,12 @@ class UserCreateScheme(UserBaseScheme):
     photo_url: Optional[str] = None
 
 
-class UserGetScheme(UserCreateScheme):
-    id: int
+class UserLoginScheme(BaseModel):
+    email: str
+    password: str
 
 
-class UserUpdateScheme(BaseModel):
+class UserScheme(BaseModel):
     id: int
     first_name: Optional[str] = None
     last_name: Optional[str] = None
@@ -30,4 +35,5 @@ class UserUpdateScheme(BaseModel):
     language: Optional[str] = None
     photo_url: Optional[str] = None
     active: Optional[bool] = None
+
 
