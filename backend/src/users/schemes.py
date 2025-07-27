@@ -3,6 +3,11 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class TokenInfo(BaseModel):
+    access_token: str
+    token_type: str
+
+
 class UserBaseScheme(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None

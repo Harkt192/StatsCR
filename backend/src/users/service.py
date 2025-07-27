@@ -1,9 +1,11 @@
+from typing import Annotated
+
 from sqlalchemy import select, update, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from users.models import User
 from users.schemes import UserCreateScheme, UserGetScheme, UserScheme
-
+from typing import Annotated
 from core.db import SessionDep
 
 from log import logger

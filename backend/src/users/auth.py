@@ -9,7 +9,6 @@ from fastapi.security import (
     OAuth2PasswordBearer,
     OAuth2PasswordRequestForm
 )
-from flask import session
 from pydantic import BaseModel
 from core.db import SessionDep
 from users.schemes import UserLoginScheme, UserScheme
@@ -21,14 +20,13 @@ from users.utils import (
 )
 from users.models import User
 from settings import settings
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from typing import Annotated
 
 from jwt import InvalidTokenError
-
-
-auth_rt = APIRouter(prefix="/jwt", tags=["JWT"])
 
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -36,14 +34,8 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 
-class TokenInfo(BaseModel):
-    access_token: str
-    token_type: str
-
-
-
-async def validate_auth_user(
-        session_dep: AsyncSession,
+async def validate_user(
+        session: AsyncSession,
         email: str,
         password: str,
 ):
@@ -52,7 +44,7 @@ async def validate_auth_user(
         detail="invalid email or password",
     )
     query = select(User).where(email == User.email)
-    result = await session_dep.execute(query)
+    result = await session.execute(query)
     user = result.scalars().first()
     if not user:
         raise unauthed_exc
@@ -71,7 +63,7 @@ async def validate_auth_user(
     return user
 
 
-async def get_current_token_payload(
+async def get_token_payload(
         token: str = Depends(oauth2_scheme),
 ) -> dict:
     try:
@@ -87,12 +79,12 @@ async def get_current_token_payload(
 
 
 async def get_current_auth_user(
-        session_dep: SessionDep,
-        payload: dict = Depends(get_current_token_payload),
-) -> UserLoginScheme:
+        session: SessionDep,
+        payload: dict = Depends(get_token_payload),
+) -> User:
     email: str = payload.get("sub")
     query = select(User).where(email == User.email)
-    result = await session_dep.execute(query)
+    result = await session.execute(query)
     user = result.scalars().first()
     if user:
         return user
@@ -104,7 +96,7 @@ async def get_current_auth_user(
 
 async def get_current_active_auth_user(
     user: UserScheme = Depends(get_current_auth_user),
-):
+) -> User:
     if user.active:
         return user
     raise HTTPException(
@@ -113,33 +105,5 @@ async def get_current_active_auth_user(
     )
 
 
-@auth_rt.post("/login", response_model=TokenInfo)
-async def auth_user_issue_jwt(
-        session_: SessionDep,
-        email: str = Form(),
-        password: str = Form()
-):
-    user = await validate_auth_user(session_dep=session_, email=email, password=password)
-    jwt_payload = {
-        "id": user.id,
-        "sub": user.email,
-    }
-    token = await encode_jwt(jwt_payload)
-    return TokenInfo(
-        access_token=token,
-        token_type="Bearer",
-    )
-
-
-@auth_rt.get("/users/me")
-async def auth_user_check_self_info(
-    payload: dict = Depends(get_current_token_payload),
-    user: UserScheme = Depends(get_current_active_auth_user),
-):
-    print(payload)
-    return {
-        "id": user.id,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
-        "email": user.email,
-    }
+PayloadDep = Depends(get_token_payload)
+UserDep = Depends(get_current_active_auth_user)
