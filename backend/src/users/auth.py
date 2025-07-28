@@ -3,11 +3,8 @@ from fastapi import (
     Depends,
     Form,
     HTTPException,
-    status
-)
-from fastapi.security import (
-    OAuth2PasswordBearer,
-    OAuth2PasswordRequestForm
+    status,
+    Request
 )
 from pydantic import BaseModel
 from core.db import SessionDep
@@ -27,11 +24,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 
 from jwt import InvalidTokenError
-
-
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/jwt/login",
-)
 
 
 async def validate_user(
@@ -63,8 +55,21 @@ async def validate_user(
     return user
 
 
+async def get_token_from_headers(
+        request: Request
+):
+    authorization = request.headers.get("Authorization")
+    token_type, token = authorization.split()
+    if token_type.lower() != "bearer":
+        raise HTTPException(
+            status_code=452,
+            detail="Bad authorization token type"
+        )
+    return token
+
+
 async def get_token_payload(
-        token: str = Depends(oauth2_scheme),
+        token: str = Depends(get_token_from_headers),
 ) -> dict:
     try:
         payload = await decode_jwt(
@@ -105,5 +110,5 @@ async def get_current_active_auth_user(
     )
 
 
-PayloadDep = Depends(get_token_payload)
-UserDep = Depends(get_current_active_auth_user)
+PayloadDep: dict = Depends(get_token_payload)
+UserDep: UserScheme = Depends(get_current_active_auth_user)
