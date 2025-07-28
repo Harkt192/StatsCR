@@ -32,7 +32,7 @@ app.include_router(create_main_router())
 
 @app.get("/", response_class=JSONResponse)
 async def start_page(request: Request):
-    return {"status-code": 200}
+    return {"status-code": 200, "page": "Main page"}
 
 
 if __name__ == "__main__":
