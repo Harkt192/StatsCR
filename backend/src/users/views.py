@@ -14,7 +14,7 @@ from users.utils import (
 )
 
 
-users_rt = APIRouter(prefix="/users")
+users_rt = APIRouter(prefix="/users", tags=["User management"])
 
 
 @users_rt.get("", response_class=JSONResponse)
@@ -66,7 +66,6 @@ async def profile(
     payload: dict = PayloadDep,
     user: UserScheme = UserDep,
 ):
-    print(payload)
     return {
         "id": user.id,
         "first_name": user.first_name,

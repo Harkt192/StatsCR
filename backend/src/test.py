@@ -1,12 +1,14 @@
-import requests
+from asyncio import run
+import json
+
+from request_utils import ApiManager
 
 
-a = requests.post("http://127.0.0.1:8001/api/jwt/login",
-                  {
-                      "username": "harktreallife@gmail.com",
-                      "password": "qwerty"
-                  }
-                  )
-print(a.json())
-b = requests.get("http://127.0.0.1:8001/api/jwt/users/me")
-print(b)
+async def main():
+    json_data = await ApiManager.getPlayerInfo("CP2C0Y9Y2")
+
+    with open("./data/clashroyale.json", "w", encoding="utf-8") as json_file:
+        json.dump(json_data, json_file, ensure_ascii=False)
+
+
+run(main())

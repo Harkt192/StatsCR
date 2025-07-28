@@ -7,10 +7,10 @@ import colorama
 
 from log import logger
 
-from core.db import init_db
 from users.views import users_rt
+from core.views import db_rt
 
-from backend.src.settings import settings
+from settings import settings
 
 
 load_dotenv()
@@ -23,6 +23,7 @@ app = FastAPI(docs_url="/api/docs", redoc_url="/api/redoc")
 def create_main_router():
     router = APIRouter(prefix="/api")
     router.include_router(users_rt)
+    router.include_router(db_rt)
     return router
 
 
@@ -31,12 +32,6 @@ app.include_router(create_main_router())
 
 @app.get("/", response_class=JSONResponse)
 async def start_page(request: Request):
-    return {"status-code": 200}
-
-
-@app.get("/init", response_class=JSONResponse)
-async def init_database(request: Request):
-    await init_db()
     return {"status-code": 200}
 
 
