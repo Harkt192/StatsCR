@@ -40,7 +40,7 @@ async def validate_user(
     user = result.scalars().first()
     if not user:
         raise unauthed_exc
-    if not await validate_password(
+    if not validate_password(
         password=password,
         hashed_password=user.password,
     ):
@@ -58,11 +58,15 @@ async def validate_user(
 async def get_token_from_headers(
         request: Request
 ):
-    authorization = request.headers.get("Authorization")
+    headers = request.headers
+    if "authorization" not in headers.keys():
+        raise HTTPException(status_code=401,
+                            detail="Missing authorization")
+    authorization = headers.get("authorization")
     token_type, token = authorization.split()
     if token_type.lower() != "bearer":
         raise HTTPException(
-            status_code=452,
+            status_code=401,
             detail="Bad authorization token type"
         )
     return token
@@ -72,7 +76,7 @@ async def get_token_payload(
         token: str = Depends(get_token_from_headers),
 ) -> dict:
     try:
-        payload = await decode_jwt(
+        payload = decode_jwt(
             token=token,
         )
     except InvalidTokenError as e:

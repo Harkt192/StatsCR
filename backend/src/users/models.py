@@ -19,15 +19,6 @@ class User(Base):
     photo_url: Mapped[Optional[str]] = mapped_column(String(200))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    @staticmethod
-    async def hash_password(received_password: str) -> str:
-        hashed_password = bcrypt.hashpw(received_password.encode(), bcrypt.gensalt()).decode()
-        return hashed_password
-
-    async def check_password(self, received_password: str) -> bool:
-        result = bcrypt.checkpw(received_password.encode(), self.password.encode())
-        return result
-
     def __str__(self):
         return f"""<User[id={self.id};email={self.email}]>"""
 

@@ -40,5 +40,3 @@ class UserScheme(BaseModel):
     language: Optional[str] = None
     photo_url: Optional[str] = None
     active: Optional[bool] = None
-
-

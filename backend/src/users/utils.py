@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from settings import settings
 
 
-async def encode_jwt(
+def encode_jwt(
     payload: dict,
     private_key: str = settings.private_key_path.read_text(),
     algorithm: str = settings.algorithm,
@@ -30,7 +30,7 @@ async def encode_jwt(
     return encoded
 
 
-async def decode_jwt(
+def decode_jwt(
     token: str | bytes,
     public_key: str = settings.public_key_path.read_text(),
     algorithm: str = settings.algorithm,
@@ -43,7 +43,7 @@ async def decode_jwt(
     return decoded
 
 
-async def hash_password(
+def hash_password(
     password: str,
 ) -> str:
     salt = bcrypt.gensalt()
@@ -51,7 +51,7 @@ async def hash_password(
     return bcrypt.hashpw(pwd_bytes, salt).decode()
 
 
-async def validate_password(
+def validate_password(
     password: str,
     hashed_password: str,
 ) -> bool:

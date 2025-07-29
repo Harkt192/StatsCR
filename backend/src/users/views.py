@@ -7,19 +7,19 @@ from users.service import UserService
 from users.auth import PayloadDep, UserDep, validate_user
 from users.models import User
 from users.utils import (
-    encode_jwt,
-    decode_jwt,
-    hash_password,
-    validate_password
+    encode_jwt
 )
-from request_utils import ApiManager
+from cr_utils import ApiManager, reformat_player_data
 from log import logger
 
 
 users_rt = APIRouter(prefix="/users", tags=["User management"])
 
 
-@users_rt.get("", response_class=JSONResponse)
+@users_rt.get(
+    "",
+    response_class=JSONResponse
+)
 async def get_users(
         session: SessionDep
 ):
@@ -27,7 +27,24 @@ async def get_users(
     return users
 
 
-@users_rt.post("/create", response_class=JSONResponse)
+@users_rt.get(
+    "/{user_id:int}",
+    response_class=JSONResponse
+)
+async def get_user_by_id(
+        session: SessionDep,
+        user_id: int
+) -> UserScheme:
+    user = await UserService.get(user_id=user_id, session=session)
+    if not user:
+        raise HTTPException(404, "Пользователь не найден")
+    return user
+
+
+@users_rt.post(
+    "/create",
+    response_class=JSONResponse
+)
 async def create_user(
         session: SessionDep,
         user_data: UserCreateScheme
@@ -36,7 +53,10 @@ async def create_user(
     return {"status": 200}
 
 
-@users_rt.patch("/change", response_class=JSONResponse)
+@users_rt.patch(
+    "/change",
+    response_class=JSONResponse
+)
 async def update_user(
         session: SessionDep,
         user_data: UserGetScheme,
@@ -45,7 +65,10 @@ async def update_user(
     return {"status": 200}
 
 
-@users_rt.post("/login", response_model=TokenInfo)
+@users_rt.post(
+    "/login",
+    response_model=TokenInfo
+)
 async def login_user(
         session: SessionDep,
         email: str = Form(),
@@ -57,42 +80,68 @@ async def login_user(
         "sub": user.email,
         "game_id": user.game_id
     }
-    token = await encode_jwt(jwt_payload)
+    token = encode_jwt(jwt_payload)
     return TokenInfo(
         access_token=token,
         token_type="Bearer",
     )
 
 
-@users_rt.get("/me")
+@users_rt.get(
+    "/me",
+    response_class=JSONResponse
+)
 async def me(
         payload: dict = PayloadDep,
         user: UserScheme = UserDep
 ):
     logger.info(f"Payload: {payload}")
-    player_data = await ApiManager.getPlayerInfo(user.game_id)
+    full_player_data = await ApiManager.getPlayerInfo(user.game_id)
+
+    player_data = reformat_player_data(full_player_data)
+    player_data["userPhotoUrl"] = user.photo_url
     return player_data
 
 
-@users_rt.get("/profile")
+@users_rt.get(
+    "/stats",
+    response_class=JSONResponse
+)
+async def player_stats(
+        payload: dict = PayloadDep,
+        user: UserScheme = UserDep
+):
+    logger.info(f"Payload: {payload}")
+    full_battlelog_data = await ApiManager.getPlayerBattleLog(user.game_id)
+
+    return full_battlelog_data
+
+
+@users_rt.get(
+    "/profile",
+    response_class=JSONResponse
+)
 async def profile(
         payload: dict = PayloadDep,
         user: UserScheme = UserDep,
 ):
     logger.info(f"Payload: {payload}")
     return {
-        "id": user.id,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "photo_url": user.photo_url,
         "email": user.email,
         "game_id": user.game_id
     }
 
 
-@users_rt.get("/{user_id}", response_class=JSONResponse)
-async def get_user_by_id(
-        session: SessionDep,
-        user_id: int
-) -> UserScheme:
-    user = await UserService.get(user_id=user_id, session=session)
-    if not user:
-        return HTTPException(404, "Пользователь не найден")
+@users_rt.get(
+    "/profile/info",
+    response_class=JSONResponse
+)
+async def profile_full_info(
+        payload: dict = PayloadDep,
+        user: UserScheme = UserDep,
+):
+    logger.info(f"Payload: {payload}")
     return user

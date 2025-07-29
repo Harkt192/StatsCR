@@ -39,7 +39,8 @@ class CrApiManager:
             ) as response:
                 if response.status != 200:
                     logger.critical(f"CrApi bad request, status: {response.status}")
-                    return {"status_code": str(response.status_code)}
+                    logger.critical(f"Request address: {request_address}")
+                    return {"status_code": str(response.status)}
 
                 logger.debug("CrApi good request")
                 json_response = await response.json()
@@ -61,9 +62,46 @@ class CrApiManager:
         elif "%23" not in player_tag:
             player_tag = "%23" + player_tag
 
-        request: str = f"/{player_tag}/battlelog"
+        request: str = f"/players/{player_tag}/battlelog"
 
         return await self.__create_request__(request)
+
+
+def reformat_player_data(
+        full_player_data: dict
+) -> dict:
+    player_data = dict()
+    player_data["tag"] = full_player_data["tag"]
+    player_data["name"] = full_player_data["name"]
+    player_data["expLevel"] = full_player_data["expLevel"]
+    player_data["trophies"] = full_player_data["trophies"]
+    player_data["wins"] = full_player_data["wins"]
+    player_data["losses"] = full_player_data["losses"]
+    player_data["clan"] = full_player_data["clan"]["name"]
+    player_data["currentFavouriteCard"] = reformat_card_data(card=full_player_data["currentFavouriteCard"])
+    player_data["currentDeck"] = []
+    for i, card in enumerate(full_player_data["currentDeck"]):
+        player_data["currentDeck"].append(reformat_card_data(card=card, i=i))
+    return player_data
+
+
+def define_url(card: dict) -> str:
+    if "evolutionLevel" in card:
+        url = card["iconUrls"]["evolutionMedium"]
+    else:
+        url = card["iconUrls"]["medium"]
+    return url
+
+
+def reformat_card_data(card: dict, i: int = 0) -> dict:
+    card_data = dict()
+    card_data["name"] = card["name"]
+    card_data["elixirCost"] = card["elixirCost"]
+    if i < 2:
+        card_data["iconUrl"] = define_url(card)
+    else:
+        card_data["iconUrl"] = card["iconUrls"]["medium"]
+    return card_data
 
 
 ApiManager: CrApiManager = CrApiManager(

@@ -9,7 +9,7 @@ from typing import Annotated
 from core.db import SessionDep
 
 from log import logger
-from users.utils import hash_password, validate_password
+from users.utils import hash_password
 
 
 class UserService:
@@ -27,7 +27,7 @@ class UserService:
     @staticmethod
     async def create(*, user_data: UserCreateScheme, session: AsyncSession):
         user_data = dict(user_data)
-        user_data["password"] = await hash_password(user_data["password"])
+        user_data["password"] = hash_password(user_data["password"])
         user = User(**user_data)
         session.add(user)
         await session.commit()
@@ -36,7 +36,7 @@ class UserService:
     async def update(*, user_data: UserScheme, session: AsyncSession):
         user_data = dict(user_data)
         if "password" in user_data.keys():
-            user_data["password"] = await hash_password(user_data["password"])
+            user_data["password"] = hash_password(user_data["password"])
 
         user = await session.get(User, user_data["id"])
 
