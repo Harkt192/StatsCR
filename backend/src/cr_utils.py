@@ -2,6 +2,8 @@ import aiohttp
 import json
 import os
 
+from fastapi import HTTPException
+
 from log import logger
 from settings import settings
 
@@ -42,7 +44,10 @@ class CrApiManager:
                 if response.status != 200:
                     logger.critical(f"CrApi bad request, status: {response.status}")
                     logger.critical(f"Request address: {request_address}")
-                    return {"status_code": str(response.status)}
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Ip address blocked."
+                    )
 
                 logger.debug("CrApi good request")
                 json_response = await response.json()
@@ -87,6 +92,10 @@ def reformat_player_data(
     player_data["currentDeck"] = []
     for i, card in enumerate(player["currentDeck"]):
         player_data["currentDeck"].append(reformat_card_data(card=card, i=i))
+    player_data["currentDeckSupportCard"] = {
+        "name": player["currentDeckSupportCards"][0]["name"],
+        "iconUrl": player["currentDeckSupportCards"][0]["iconUrls"]["medium"]
+    }
     return player_data
 
 
@@ -102,6 +111,10 @@ def reformat_player_in_battle_data(player: dict) -> dict:
     player_data["cards"] = []
     for i, card in enumerate(player["cards"]):
         player_data["cards"].append(reformat_card_data(card=card, i=i))
+    player_data["supportCard"] = {
+        "name": player["supportCards"][0]["name"],
+        "iconUrl": player["supportCards"][0]["iconUrls"]["medium"]
+    }
 
     return player_data
 
