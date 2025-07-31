@@ -6,12 +6,13 @@ from users.schemes import UserGetScheme, UserCreateScheme, UserScheme, TokenInfo
 from users.service import UserService
 from users.auth import PayloadDep, UserDep, validate_user
 from users.models import User
-from users.utils import (
-    encode_jwt
+from users.utils import encode_jwt
+from cr_utils import (
+    ApiManager,
+    reformat_player_data,
+    reformat_battlelog_data
 )
-from cr_utils import ApiManager, reformat_player_data
 from log import logger
-
 
 users_rt = APIRouter(prefix="/users", tags=["User management"])
 
@@ -59,7 +60,7 @@ async def create_user(
 )
 async def update_user(
         session: SessionDep,
-        user_data: UserGetScheme,
+        user_data: UserScheme,
 ):
     await UserService.update(user_data=user_data, session=session)
     return {"status": 200}
@@ -104,7 +105,7 @@ async def me(
 
 
 @users_rt.get(
-    "/stats",
+    "/me/stats",
     response_class=JSONResponse
 )
 async def player_stats(
@@ -113,8 +114,9 @@ async def player_stats(
 ):
     logger.info(f"Payload: {payload}")
     full_battlelog_data = await ApiManager.getPlayerBattleLog(user.game_id)
+    battlelog_data = reformat_battlelog_data(full_battlelog_data)
 
-    return full_battlelog_data
+    return battlelog_data
 
 
 @users_rt.get(

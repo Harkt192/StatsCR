@@ -24,3 +24,4 @@ class User(Base):
 
     def __repr__(self):
         return f"""[{self.id} {self.email} {self.game_id}]"""
+

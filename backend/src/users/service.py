@@ -35,7 +35,7 @@ class UserService:
     @staticmethod
     async def update(*, user_data: UserScheme, session: AsyncSession):
         user_data = dict(user_data)
-        if "password" in user_data.keys():
+        if "password" in user_data.keys() and user_data["password"]:
             user_data["password"] = hash_password(user_data["password"])
 
         user = await session.get(User, user_data["id"])

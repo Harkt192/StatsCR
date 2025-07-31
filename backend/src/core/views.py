@@ -8,7 +8,10 @@ from log import logger
 db_rt = APIRouter(prefix="/db", tags=["Database"])
 
 
-@db_rt.post("/init", response_class=JSONResponse)
+@db_rt.post(
+    "/init",
+    response_class=JSONResponse
+)
 async def init_database():
     try:
         await init_db()

@@ -1,4 +1,5 @@
 import aiohttp
+import json
 import os
 
 from log import logger
@@ -16,6 +17,7 @@ class CrApiManager:
     и ещё что-то, позже добавлю.
 
     """
+
     def __init__(
             self,
             apikey: str,
@@ -34,8 +36,8 @@ class CrApiManager:
 
         async with aiohttp.ClientSession() as http_session:
             async with http_session.get(
-                request_address,
-                headers=self.headers
+                    request_address,
+                    headers=self.headers
             ) as response:
                 if response.status != 200:
                     logger.critical(f"CrApi bad request, status: {response.status}")
@@ -68,21 +70,74 @@ class CrApiManager:
 
 
 def reformat_player_data(
-        full_player_data: dict
+        player: dict
 ) -> dict:
     player_data = dict()
-    player_data["tag"] = full_player_data["tag"]
-    player_data["name"] = full_player_data["name"]
-    player_data["expLevel"] = full_player_data["expLevel"]
-    player_data["trophies"] = full_player_data["trophies"]
-    player_data["wins"] = full_player_data["wins"]
-    player_data["losses"] = full_player_data["losses"]
-    player_data["clan"] = full_player_data["clan"]["name"]
-    player_data["currentFavouriteCard"] = reformat_card_data(card=full_player_data["currentFavouriteCard"])
+    player_data["tag"] = player["tag"]
+    player_data["name"] = player["name"]
+    player_data["expLevel"] = player["expLevel"]
+    player_data["trophies"] = player["trophies"]
+    player_data["wins"] = player["wins"]
+    player_data["losses"] = player["losses"]
+    if "clan" in player.keys():
+        player_data["clan"] = player["clan"]["name"]
+    else:
+        player_data["clan"] = None
+    player_data["currentFavouriteCard"] = reformat_card_data(card=player["currentFavouriteCard"])
     player_data["currentDeck"] = []
-    for i, card in enumerate(full_player_data["currentDeck"]):
+    for i, card in enumerate(player["currentDeck"]):
         player_data["currentDeck"].append(reformat_card_data(card=card, i=i))
     return player_data
+
+
+def reformat_player_in_battle_data(player: dict) -> dict:
+    player_data = dict()
+    player_data["tag"] = player["tag"]
+    player_data["name"] = player["name"]
+    player_data["crowns"] = player["crowns"]
+    if "clan" in player.keys():
+        player_data["clan"] = player["clan"]["name"]
+    else:
+        player_data["clan"] = None
+    player_data["cards"] = []
+    for i, card in enumerate(player["cards"]):
+        player_data["cards"].append(reformat_card_data(card=card, i=i))
+
+    return player_data
+
+
+def reformat_battlelog_data(
+        full_battlelog_data: list
+) -> list:
+    battlelog_data = []
+    for battle in full_battlelog_data:
+        battle_data = reformat_battle_data(battle)
+        battlelog_data.append(battle_data)
+    return battlelog_data
+
+
+def download_json(data: dict | list):
+    with open("./data/test.json", "w", encoding="utf-8") as json_file:
+        json.dump(data, json_file, ensure_ascii=False)
+
+
+def reformat_battle_data(battle: dict) -> dict:
+    battle_data = dict()
+    battle_data["type"] = battle["type"]
+    battle_data["isLadderTournament"] = battle["isLadderTournament"]
+    battle_data["gameMode"] = battle["gameMode"]["name"]
+
+    battle_data["team"] = []
+    for player in battle["team"]:
+        player_data = reformat_player_in_battle_data(player)
+        battle_data["team"].append(player_data)
+
+    battle_data["opponent"] = []
+    for player in battle["opponent"]:
+        player_data = reformat_player_in_battle_data(player)
+        battle_data["opponent"].append(player_data)
+
+    return battle_data
 
 
 def define_url(card: dict) -> str:

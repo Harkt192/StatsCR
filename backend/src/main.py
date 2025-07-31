@@ -11,6 +11,7 @@ from users.views import users_rt
 from core.views import db_rt
 
 from settings import settings
+from core.db import Base
 
 
 load_dotenv()
@@ -40,4 +41,5 @@ async def start_page():
 
 if __name__ == "__main__":
     logger.info("Starting server")
+    print(Base.metadata.tables)
     uvicorn.run(app, host=settings.SERVER_HOST, port=8001)
