@@ -36,9 +36,10 @@ class CrApiManager:
     async def __create_request__(self, request: str) -> dict:
         request_address: str = self.address + request
 
+
         async with aiohttp.ClientSession() as http_session:
             async with http_session.get(
-                    request_address,
+                    url=request_address,
                     headers=self.headers
             ) as response:
                 if response.status != 200:
@@ -111,10 +112,11 @@ def reformat_player_in_battle_data(player: dict) -> dict:
     player_data["cards"] = []
     for i, card in enumerate(player["cards"]):
         player_data["cards"].append(reformat_card_data(card=card, i=i))
-    player_data["supportCard"] = {
-        "name": player["supportCards"][0]["name"],
-        "iconUrl": player["supportCards"][0]["iconUrls"]["medium"]
-    }
+    if player["supportCards"]:
+        player_data["supportCard"] = {
+            "name": player["supportCards"][0]["name"],
+            "iconUrl": player["supportCards"][0]["iconUrls"]["medium"]
+        }
 
     return player_data
 
@@ -164,7 +166,8 @@ def define_url(card: dict) -> str:
 def reformat_card_data(card: dict, i: int = 0) -> dict:
     card_data = dict()
     card_data["name"] = card["name"]
-    card_data["elixirCost"] = card["elixirCost"]
+    if card_data["name"] != "Mirror":
+        card_data["elixirCost"] = card["elixirCost"]
     if i < 2:
         card_data["iconUrl"] = define_url(card)
     else:

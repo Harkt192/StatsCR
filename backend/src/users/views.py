@@ -14,6 +14,9 @@ from cr_utils import (
 )
 from log import logger
 
+from app import redis_service
+
+
 users_rt = APIRouter(prefix="/users", tags=["User management"])
 
 
@@ -97,7 +100,18 @@ async def me(
         user: UserScheme = UserDep
 ):
     logger.info(f"Payload: {payload}")
-    full_player_data = await ApiManager.getPlayerInfo(user.game_id)
+    key = f"{user.email}-me"
+    ttl = 20
+    cash_data = await redis_service.get(key)
+    logger.info(f"Ключ Redis: {key}")
+    logger.info(f"Данные кэша: {cash_data}")
+    if not cash_data:
+        full_player_data = await ApiManager.getPlayerInfo(user.game_id)
+        await redis_service.setex(key, ttl, str(full_player_data).encode())
+        logger.info("Кэш создан")
+    else:
+        logger.info("Кэш получен")
+        full_player_data = eval(cash_data)
 
     player_data = reformat_player_data(full_player_data)
     player_data["userPhotoUrl"] = user.photo_url
@@ -108,7 +122,7 @@ async def me(
     "/me/stats",
     response_class=JSONResponse
 )
-async def player_stats(
+async def my_stats(
         payload: dict = PayloadDep,
         user: UserScheme = UserDep
 ):

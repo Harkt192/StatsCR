@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import JSONResponse
-
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 import uvicorn
 import colorama
@@ -13,12 +13,19 @@ from core.views import db_rt
 from settings import settings
 from core.db import Base
 
+from app import app
 
 load_dotenv()
 
 colorama.init(autoreset=True)
 
-app = FastAPI(docs_url="/api/docs", redoc_url="/api/redoc")
+
+async def startup():
+    logger.info("Site is running.")
+
+
+async def shutdown():
+    logger.info("Site is closing")
 
 
 def create_main_router():
