@@ -22,6 +22,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 
 async def init_db():
     async with engine.begin() as connection:
+        print(Base.metadata)
         await connection.run_sync(Base.metadata.drop_all)
         await connection.run_sync(Base.metadata.create_all)
 

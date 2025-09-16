@@ -11,7 +11,6 @@ from users.views import users_rt
 from core.views import db_rt
 
 from settings import settings
-from core.db import Base
 
 from app import app
 

@@ -3,8 +3,22 @@ from fastapi import FastAPI
 from redis.asyncio import Redis
 from redis.asyncio.connection import ConnectionPool
 
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(docs_url="/api/docs", redoc_url="/api/redoc")
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_methods=["get", "post", "patch"],
+    allow_headers=["*"]
+)
+
 
 redis_pool = ConnectionPool.from_url(
     "redis://127.0.0.1:6379",

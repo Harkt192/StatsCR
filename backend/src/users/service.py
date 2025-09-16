@@ -17,12 +17,18 @@ class UserService:
     async def get_all(session: AsyncSession):
         query = select(User)
         users = await session.execute(query)
-        return users.scalars().all()
+        return users.scalars().all() if users else None
 
     @staticmethod
     async def get(*, user_id: int, session: AsyncSession) -> User or None:
         user = await session.get(User, user_id)
         return user
+
+    @staticmethod
+    async def find_by_game_id(*, game_id: str, session: AsyncSession) -> User or None:
+        query = select(User).where(game_id == User.game_id)
+        user = await session.execute(query)
+        return user.scalars().first() if user else None
 
     @staticmethod
     async def create(*, user_data: UserCreateScheme, session: AsyncSession):

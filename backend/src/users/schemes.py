@@ -40,3 +40,13 @@ class UserScheme(BaseModel):
     language: Optional[str] = None
     photo_url: Optional[str] = None
     active: Optional[bool] = None
+
+
+class PlayerDataScheme(BaseModel):
+    tag: str
+    name: str
+    expLevel: int
+    trophies: int
+    wins: int
+    losses: int
+

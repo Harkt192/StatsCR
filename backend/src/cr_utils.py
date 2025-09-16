@@ -36,18 +36,17 @@ class CrApiManager:
     async def __create_request__(self, request: str) -> dict:
         request_address: str = self.address + request
 
-
         async with aiohttp.ClientSession() as http_session:
             async with http_session.get(
                     url=request_address,
                     headers=self.headers
             ) as response:
                 if response.status != 200:
-                    logger.critical(f"CrApi bad request, status: {response.status}")
-                    logger.critical(f"Request address: {request_address}")
+                    logger.error(f"CrApi bad request, status: {response.status}")
+                    logger.error(f"Request address: {request_address}")
                     raise HTTPException(
                         status_code=403,
-                        detail="Ip address blocked."
+                        detail="Api request error."
                     )
 
                 logger.debug("CrApi good request")

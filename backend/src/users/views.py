@@ -2,7 +2,13 @@ from fastapi import HTTPException, APIRouter, Form
 from fastapi.responses import JSONResponse
 
 from core.db import SessionDep
-from users.schemes import UserGetScheme, UserCreateScheme, UserScheme, TokenInfo
+from users.schemes import (
+    UserGetScheme,
+    UserCreateScheme,
+    UserScheme,
+    TokenInfo,
+    PlayerDataScheme
+)
 from users.service import UserService
 from users.auth import PayloadDep, UserDep, validate_user
 from users.models import User
@@ -13,36 +19,36 @@ from cr_utils import (
     reformat_battlelog_data
 )
 from log import logger
+from settings import settings
 
 from app import redis_service
 
-
 users_rt = APIRouter(prefix="/users", tags=["User management"])
 
-
-@users_rt.get(
-    "",
-    response_class=JSONResponse
-)
-async def get_users(
-        session: SessionDep
-):
-    users = await UserService.get_all(session=session)
-    return users
-
-
-@users_rt.get(
-    "/{user_id:int}",
-    response_class=JSONResponse
-)
-async def get_user_by_id(
-        session: SessionDep,
-        user_id: int
-) -> UserScheme:
-    user = await UserService.get(user_id=user_id, session=session)
-    if not user:
-        raise HTTPException(404, "Пользователь не найден")
-    return user
+# Ветки для разработки
+# @users_rt.get(
+#     "",
+#     response_class=JSONResponse
+# )
+# async def get_users(
+#         session: SessionDep
+# ):
+#     users = await UserService.get_all(session=session)
+#     return users
+#
+#
+# @users_rt.get(
+#     "/{user_id:int}",
+#     response_class=JSONResponse
+# )
+# async def get_user_by_id(
+#         session: SessionDep,
+#         user_id: int
+# ) -> UserScheme:
+#     user = await UserService.get(user_id=user_id, session=session)
+#     if not user:
+#         raise HTTPException(404, "Пользователь не найден")
+#     return user
 
 
 @users_rt.post(
@@ -78,7 +84,11 @@ async def login_user(
         email: str = Form(),
         password: str = Form()
 ):
-    user = await validate_user(session=session, email=email, password=password)
+    user = await validate_user(
+        session=session,
+        email=email,
+        password=password
+    )
     jwt_payload = {
         "id": user.id,
         "sub": user.email,
@@ -100,14 +110,17 @@ async def me(
         user: UserScheme = UserDep
 ):
     logger.info(f"Payload: {payload}")
-    key = f"{user.email}-me"
-    ttl = 20
+    key = f"{user.game_id.upper()}-player"
     cash_data = await redis_service.get(key)
     logger.info(f"Ключ Redis: {key}")
     logger.info(f"Данные кэша: {cash_data}")
     if not cash_data:
         full_player_data = await ApiManager.getPlayerInfo(user.game_id)
-        await redis_service.setex(key, ttl, str(full_player_data).encode())
+        await redis_service.setex(
+            key,
+            settings.redis_ttl,
+            str(full_player_data).encode()
+        )
         logger.info("Кэш создан")
     else:
         logger.info("Кэш получен")
@@ -127,10 +140,95 @@ async def my_stats(
         user: UserScheme = UserDep
 ):
     logger.info(f"Payload: {payload}")
-    full_battlelog_data = await ApiManager.getPlayerBattleLog(user.game_id)
-    battlelog_data = reformat_battlelog_data(full_battlelog_data)
 
-    return battlelog_data
+    key = f"{user.game_id.upper()}-player-stats"
+    cash_data = await redis_service.get(key)
+    logger.info(f"Ключ Redis: {key}")
+    logger.info(f"Данные кэша: {cash_data}")
+    try:
+        if not cash_data:
+            full_battlelog_data = await ApiManager.getPlayerBattleLog(user.game_id)
+            await redis_service.setex(
+                key,
+                settings.redis_ttl,
+                str(full_battlelog_data).encode()
+            )
+            logger.info("Кэш создан")
+        else:
+            logger.info("Кэш получен")
+            full_battlelog_data = eval(cash_data)
+        battlelog_data = reformat_battlelog_data(full_battlelog_data)
+        return battlelog_data
+    except Exception as e:
+        logger.info(e)
+        return e
+
+
+@users_rt.get(
+    "/{player_tag:str}",
+    response_class=JSONResponse
+)
+async def get_player(
+        session: SessionDep,
+        player_tag: str
+):
+    user = await UserService.find_by_game_id(game_id=player_tag, session=session)
+    key = f"{user.game_id.upper()}-player"
+    cash_data = await redis_service.get(key)
+    logger.info(f"Ключ Redis: {key}")
+    logger.info(f"Данные кэша: {cash_data}")
+    try:
+        if not cash_data:
+            full_player_data = await ApiManager.getPlayerInfo(player_tag)
+            await redis_service.setex(
+                key,
+                settings.redis_ttl,
+                str(full_player_data).encode()
+            )
+            logger.info("Кэш создан")
+
+        else:
+            logger.info("Кэш получен")
+            full_player_data = eval(cash_data)
+
+        player_data = reformat_player_data(full_player_data)
+        player_data["userPhotoUrl"] = user.photo_url if user else None
+        return player_data  # PlayerDataScheme(**player_data)
+    except Exception as e:
+        logger.error(e)
+        return e
+
+
+@users_rt.get(
+    "/{player_tag:str}/stats",
+    response_class=JSONResponse
+)
+async def player_stats(
+        session: SessionDep,
+        player_tag: str,
+):
+    user = await UserService.find_by_game_id(game_id=player_tag, session=session)
+    key = f"{user.game_id.upper()}-player-stats"
+    cash_data = await redis_service.get(key)
+    logger.info(f"Ключ Redis: {key}")
+    logger.info(f"Данные кэша: {cash_data}")
+    try:
+        if not cash_data:
+            full_battlelog_data = await ApiManager.getPlayerBattleLog(user.game_id)
+            await redis_service.setex(
+                key,
+                settings.redis_ttl,
+                str(full_battlelog_data).encode()
+            )
+            logger.info("Кэш создан")
+        else:
+            logger.info("Кэш получен")
+            full_battlelog_data = eval(cash_data)
+        battlelog_data = reformat_battlelog_data(full_battlelog_data)
+        return battlelog_data
+    except Exception as e:
+        logger.info(e)
+        return e
 
 
 @users_rt.get(

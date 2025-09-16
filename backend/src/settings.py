@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     public_key_path: Path = BASE_DIR / "certs" / "jwt-public.pem"
     algorithm: str = "RS256"
     access_token_expire_minutes: int = 15
+    redis_ttl: int = 60
     SECRET_KEY:str = secrets.token_urlsafe(32)
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
@@ -32,7 +33,7 @@ class Settings(BaseSettings):
                 host=self.POSTGRES_HOST,
                 username=self.POSTGRES_USER,
                 password=self.POSTGRES_PASSWORD,
-                port=5432,
+                port=5444,
                 path=self.POSTGRES_DB
             )
         )
