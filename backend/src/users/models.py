@@ -1,3 +1,5 @@
+from enum import unique
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy import ForeignKey, Integer, Text, String, Boolean
@@ -11,9 +13,8 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(100), unique=True)
+    username: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String(200))
-    first_name: Mapped[Optional[str]] = mapped_column(String(100))
-    last_name: Mapped[Optional[str]] = mapped_column(String(100))
     game_id: Mapped[Optional[str]] = mapped_column(String(9), unique=True)
     language: Mapped[Optional[str]] = mapped_column(String(10), default="ru")
     photo_url: Mapped[Optional[str]] = mapped_column(String(200))

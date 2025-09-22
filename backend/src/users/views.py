@@ -37,18 +37,18 @@ users_rt = APIRouter(prefix="/users", tags=["User management"])
 #     return users
 #
 #
-# @users_rt.get(
-#     "/{user_id:int}",
-#     response_class=JSONResponse
-# )
-# async def get_user_by_id(
-#         session: SessionDep,
-#         user_id: int
-# ) -> UserScheme:
-#     user = await UserService.get(user_id=user_id, session=session)
-#     if not user:
-#         raise HTTPException(404, "Пользователь не найден")
-#     return user
+@users_rt.get(
+    "/{user_id:int}",
+    response_class=JSONResponse
+)
+async def get_user_by_id(
+        session: SessionDep,
+        user_id: int
+) -> UserScheme:
+    user = await UserService.get(user_id=user_id, session=session)
+    if not user:
+        raise HTTPException(404, "Пользователь не найден")
+    return user
 
 
 @users_rt.post(
@@ -173,7 +173,7 @@ async def get_player(
         player_tag: str
 ):
     user = await UserService.find_by_game_id(game_id=player_tag, session=session)
-    key = f"{user.game_id.upper()}-player"
+    key = f"{player_tag.upper()}-player"
     cash_data = await redis_service.get(key)
     logger.info(f"Ключ Redis: {key}")
     logger.info(f"Данные кэша: {cash_data}")
@@ -193,7 +193,7 @@ async def get_player(
 
         player_data = reformat_player_data(full_player_data)
         player_data["userPhotoUrl"] = user.photo_url if user else None
-        return player_data  # PlayerDataScheme(**player_data)
+        return player_data
     except Exception as e:
         logger.error(e)
         return e
@@ -208,13 +208,13 @@ async def player_stats(
         player_tag: str,
 ):
     user = await UserService.find_by_game_id(game_id=player_tag, session=session)
-    key = f"{user.game_id.upper()}-player-stats"
+    key = f"{player_tag.upper()}-player-stats"
     cash_data = await redis_service.get(key)
     logger.info(f"Ключ Redis: {key}")
     logger.info(f"Данные кэша: {cash_data}")
     try:
         if not cash_data:
-            full_battlelog_data = await ApiManager.getPlayerBattleLog(user.game_id)
+            full_battlelog_data = await ApiManager.getPlayerBattleLog(player_tag)
             await redis_service.setex(
                 key,
                 settings.redis_ttl,
@@ -227,7 +227,7 @@ async def player_stats(
         battlelog_data = reformat_battlelog_data(full_battlelog_data)
         return battlelog_data
     except Exception as e:
-        logger.info(e)
+        logger.error(e)
         return e
 
 

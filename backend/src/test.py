@@ -61,3 +61,7 @@ setattr(spunchbob, "a", 2)
 print(spunchbob.height)
 print(spunchbob.a)
 
+print("\n\n\n")
+
+a = "[{'adsa':123, 'blalba': [1, 3, 26]}]"
+print(eval(a))
